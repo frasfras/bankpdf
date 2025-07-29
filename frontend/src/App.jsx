@@ -35,11 +35,7 @@ let parsedData = JSON.parse(cleanedJsonString);
       }
     }
 
-    return [headers, ...normalized.filter(row => {
-  const description = row[1]?.toUpperCase() || "";
-  const isEmpty = row.every(cell => cell.trim() === "");
-  return !description.includes("BEGINNINGBALANCE") && !isEmpty;
-})];
+    return [headers, ...normalized];
 
   };
 
