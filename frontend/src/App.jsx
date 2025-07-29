@@ -14,11 +14,15 @@ function App() {
   const normalizeData = (raw) => {
     if (!Array.isArray(raw) || raw.length === 0) return [];
 
+    let jsonString = raw;
+let cleanedJsonString = jsonString.replace(/BEGINNINGBALANCE\\n/g, '');
+let parsedData = JSON.parse(cleanedJsonString);
+
     const normalized = [];
     const headers = raw[0];
 
-    for (let i = 1; i < raw.length; i++) {
-      const block = raw[i];
+    for (let i = 1; i < parsedData.length; i++) {
+      const block = parsedData[i];
       const numRows = block[0]?.split("\n").length || 0;
 
       for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
