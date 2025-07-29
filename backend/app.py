@@ -27,7 +27,7 @@ def extract_table():
                                 cleaned_row.append(cell)
                             else:
                                 cleaned_row.append('')
-                        line_items.append(cleaned_row)
+                          line_items.append(cleaned_row)
 
     return jsonify(line_items)
 
