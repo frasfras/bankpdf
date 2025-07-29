@@ -62,7 +62,7 @@ function App() {
     // 🧼 Clean up repeated headers and BEGINNINGBALANCE rows
   const cleaned = normalized.filter(row => {
     const desc = row[1]?.toUpperCase() || "";
-    const isFakeRow = desc.includes("BEGINNINGBALANCE");
+//    const isFakeRow = desc.includes("BEGINNINGBALANCE");
     const isEmpty = row.every(cell => cell.trim() === "");
     const isHeaderRepeat = row.join("|").toUpperCase() === headers.join("|").toUpperCase();
     return !isFakeRow && !isEmpty && !isHeaderRepeat;
