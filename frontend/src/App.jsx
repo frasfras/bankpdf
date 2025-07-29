@@ -1,14 +1,37 @@
 import React, { useState } from "react";
-import * as XLSX from "xlsx"; // make sure this is at the top of your file
+import * as XLSX from "xlsx";
 
 function App() {
   const [file, setFile] = useState(null);
-  const [data, setData] = useState(null);
+  const [headers, setHeaders] = useState([]);
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const headers = ["Date", "Description", "Ref", "Details", "Debit Amount", "Credit Amount", "Balance"];
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
+  };
+
+  const normalizeData = (raw) => {
+    if (!Array.isArray(raw) || raw.length === 0) return [];
+
+    const normalized = [];
+    const headers = raw[0];
+
+    for (let i = 1; i < raw.length; i++) {
+      const block = raw[i];
+      const numRows = block[0]?.split("\n").length || 0;
+
+      for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+        const row = headers.map((_, colIndex) => {
+          const col = block[colIndex] || "";
+          const lines = col.split("\n");
+          return lines[rowIndex] || "";
+        });
+        normalized.push(row);
+      }
+    }
+
+    return [headers, ...normalized];
   };
 
   const handleUpload = async () => {
@@ -28,93 +51,86 @@ function App() {
       );
 
       const result = await response.json();
-      setData(result);
+      const normalized = normalizeData(result);
+
+      if (normalized.length > 1) {
+        setHeaders(normalized[0]);
+        setData(normalized.slice(1));
+      } else {
+        setHeaders([]);
+        setData([]);
+      }
     } catch (error) {
       console.error("Upload failed:", error);
-      setData({ error: "Failed to upload or parse PDF" });
+      setData([]);
     } finally {
       setLoading(false);
     }
   };
+
   const downloadCSV = () => {
-  if (!data || data.length === 0) return;
+    if (!headers.length || !data.length) return;
 
-  const headers = ["Date", "Description", "Ref", "Details", "Debit Amount", "Credit Amount", "Balance"];
+    const csvRows = [
+      headers.join(","),
+      ...data.map(row => row.map(cell => `"${cell || ""}"`).join(","))
+    ];
 
-  const csvRows = [
-    headers.join(","), // header row
-    ...data.map(row => row.map(cell => `"${cell || ""}"`).join(",")) // data rows with safe quotes
-  ];
+    const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
 
-  const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "bank_statement.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "bank_statement.csv";
-  a.click();
-  URL.revokeObjectURL(url);
-};
+  const downloadExcel = () => {
+    if (!headers.length || !data.length) return;
 
+    const rows = data.map(row =>
+      headers.reduce((obj, key, index) => {
+        obj[key] = row[index] || "";
+        return obj;
+      }, {})
+    );
 
-const downloadExcel = () => {
-  if (!data || data.length === 0) return;
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
 
-  const headers = ["Date", "Description", "Ref", "Details", "Debit Amount", "Credit Amount", "Balance"];
-  
-  const rows = data.map(row =>
-    headers.reduce((obj, key, index) => {
-      obj[key] = row[index] || "";
-      return obj;
-    }, {})
-  );
-
-  const worksheet = XLSX.utils.json_to_sheet(rows);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
-
-  XLSX.writeFile(workbook, "bank_statement.xlsx");
-};
+    XLSX.writeFile(workbook, "bank_statement.xlsx");
+  };
 
   return (
-    <div style={{ padding: 20 }}>
+    <div style={{ padding: 20, fontFamily: "Arial" }}>
       <h2>PDF Table Extractor</h2>
       <input type="file" accept="application/pdf" onChange={handleFileChange} />
       <button onClick={handleUpload} disabled={loading || !file}>
         {loading ? "Uploading..." : "Upload PDF"}
       </button>
-      <button onClick={downloadCSV} disabled={!data}>
-         📄Download CSV
+      <button onClick={downloadCSV} disabled={!data.length}>
+        Download CSV
       </button>
-      <button onClick={downloadExcel} disabled={!data}>
-          Download Excel
+      <button onClick={downloadExcel} disabled={!data.length}>
+        Download Excel
       </button>
 
-      <div style={{ marginTop: 20 }}>
-        {data ? (
-  <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", marginTop: 20 }}>
-    <thead>
-      <tr>
-        {headers.map((header, index) => (
-          <th key={index}>{header}</th>
-        ))}
-      </tr>
-    </thead>
-    <tbody>
-      {data.map((row, i) => (
-        <tr key={i}>
-          {row.map((cell, j) => (
-            <td key={j}>{cell}</td>
-          ))}
-        </tr>
-      ))}
-    </tbody>
-  </table>
-) : (
-  <p>No data yet.</p>
-)}
-
-      </div>
+      {data.length > 0 && (
+        <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", marginTop: 20 }}>
+          <thead>
+            <tr>{headers.map((h, i) => <th key={i}>{h}</th>)}</tr>
+          </thead>
+          <tbody>
+            {data.map((row, i) => (
+              <tr key={i}>
+                {row.map((cell, j) => <td key={j}>{cell}</td>)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }
