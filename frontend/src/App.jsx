@@ -30,7 +30,7 @@ function App() {
     if (header.toLowerCase() === "date") {
       return /^[A-Z][a-z]{2} \d{2}$/.test(value) || /^[A-Z][a-z]{2} \d{1,2}$/.test(value); // like Jun 09
     }
-    return true;
+   // return true;
   };
 
   const handleFileChange = (e) => {
