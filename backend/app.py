@@ -20,7 +20,14 @@ def extract_table():
             for table in tables:
                 for row in table:
                     if row and any(cell and cell.strip() for cell in row):
-                        line_items.append(row)
+                         # Clean the row: replace whitespace-only cells with empty string
+                         cleaned_row = []
+                         for cell in row:
+                            if cell and cell.strip():
+                                cleaned_row.append(cell)
+                            else:
+                                cleaned_row.append('')
+                        line_items.append(cleaned_row)
 
     return jsonify(line_items)
 
