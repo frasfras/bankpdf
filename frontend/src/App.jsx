@@ -23,6 +23,16 @@ function App() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
 
+    const isValidCell = (value, header) => {
+    if (header.toLowerCase().includes("amount") || header.toLowerCase() === "balance") {
+      return /^\d{1,3}(,\d{3})*(\.\d{2})?$|^\d+(\.\d{2})?$/.test(value); // number with commas
+    }
+    if (header.toLowerCase() === "date") {
+      return /^[A-Z][a-z]{2} \d{2}$/.test(value) || /^[A-Z][a-z]{2} \d{1,2}$/.test(value); // like Jun 09
+    }
+    return true;
+  };
+
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
@@ -49,7 +59,12 @@ function App() {
 
     return [
       headers,
-      ...normalized];
+      ...normalized.filter(row => {
+        const description = row[1]?.toUpperCase() || "";
+        const isEmpty = row.every(cell => cell.trim() === "");
+        return !description.includes("BEGINNINGBALANCE") && !isEmpty;
+      })
+    ];
     
   };
 
@@ -190,6 +205,8 @@ function App() {
                 {data.map((row, rowIndex) => (
                   <TableRow key={rowIndex}>
                     {row.map((cell, colIndex) => (
+                    const header = headers[colIndex];
+                    const valid = isValidCell(cell, header);
                       <TableCell key={colIndex}>
                         <input
                           value={cell}
@@ -199,7 +216,8 @@ function App() {
                             border: "none",
                             background: "transparent",
                             outline: "none",
-                            font: "inherit"
+                            font: "inherit",
+                            color: valid ? "inherit" : "red",
                           }}
                         />
                       </TableCell>
