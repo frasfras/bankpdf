@@ -31,7 +31,12 @@ function App() {
       }
     }
 
-    return [headers, ...normalized];
+    return [headers, ...normalized.filter(row => {
+  const description = row[1]?.toUpperCase() || "";
+  const isEmpty = row.every(cell => cell.trim() === "");
+  return !description.includes("BEGINNINGBALANCE") && !isEmpty;
+})];
+
   };
 
   const handleUpload = async () => {
@@ -131,6 +136,12 @@ function App() {
           </tbody>
         </table>
       )}
+      {headers.length > 0 && (
+        <p style={{ marginTop: 10, fontStyle: "italic", color: "#555" }}>
+          Note: Credit amounts may appear one row above where they apply due to source formatting. Please verify during export.
+        </p>
+      )}
+
     </div>
   );
 }
