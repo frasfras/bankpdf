@@ -59,14 +59,16 @@ function App() {
       }
     }
 
-    return [
-      headers,
-      ...normalized.filter(row => {
-        const description = row[1]?.toUpperCase() || "";
-        const isEmpty = row.every(cell => cell.trim() === "");
-        return !description.includes("BEGINNINGBALANCE") && !isEmpty;
-      })
-    ];
+    // 🧼 Clean up repeated headers and BEGINNINGBALANCE rows
+  const cleaned = normalized.filter(row => {
+    const desc = row[1]?.toUpperCase() || "";
+    const isFakeRow = desc.includes("BEGINNINGBALANCE");
+    const isEmpty = row.every(cell => cell.trim() === "");
+    const isHeaderRepeat = row.join("|").toUpperCase() === headers.join("|").toUpperCase();
+    return !isFakeRow && !isEmpty && !isHeaderRepeat;
+  });
+
+  return [headers, ...cleaned];
     
   };
 
