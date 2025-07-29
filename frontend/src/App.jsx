@@ -21,16 +21,18 @@ function App() {
   const [file, setFile] = useState(null);
   const [headers, setHeaders] = useState([]);
   const [data, setData] = useState([]);
+  const [originalData, setOriginalData] = useState([]);
+  const [dirtyRows, setDirtyRows] = useState(new Set());
   const [loading, setLoading] = useState(false);
 
-    const isValidCell = (value, header) => {
+  const isValidCell = (value, header) => {
     if (header.toLowerCase().includes("amount") || header.toLowerCase() === "balance") {
       return /^\d{1,3}(,\d{3})*(\.\d{2})?$|^\d+(\.\d{2})?$/.test(value); // number with commas
     }
     if (header.toLowerCase() === "date") {
       return /^[A-Z][a-z]{2} \d{2}$/.test(value) || /^[A-Z][a-z]{2} \d{1,2}$/.test(value); // like Jun 09
     }
-   // return true;
+    return true;
   };
 
   const handleFileChange = (e) => {
@@ -90,6 +92,9 @@ function App() {
       if (normalized.length > 1) {
         setHeaders(normalized[0]);
         setData(normalized.slice(1));
+        setOriginalData(JSON.parse(JSON.stringify(normalized.slice(1)))); // deep clone
+        setDirtyRows(new Set());
+
       } else {
         setHeaders([]);
         setData([]);
@@ -134,11 +139,38 @@ function App() {
     XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
     XLSX.writeFile(workbook, "bank_statement.xlsx");
   };
+//  const handleCellChange = (e, rowIndex, colIndex) => {
+//  const newData = [...data];
+//  newData[rowIndex][colIndex] = e.target.value;
+//  setData(newData);
+//  };
   const handleCellChange = (e, rowIndex, colIndex) => {
+  const value = e.target.value;
   const newData = [...data];
-  newData[rowIndex][colIndex] = e.target.value;
+  newData[rowIndex][colIndex] = value;
+
+  const isDifferent = value !== originalData[rowIndex]?.[colIndex];
+  const newDirtyRows = new Set(dirtyRows);
+  if (isDifferent) newDirtyRows.add(rowIndex);
+  else {
+    // check if row is still dirty
+    const isRowDirty = newData[rowIndex].some((val, i) => val !== originalData[rowIndex][i]);
+    if (!isRowDirty) newDirtyRows.delete(rowIndex);
+  }
+
   setData(newData);
-  };
+  setDirtyRows(newDirtyRows);
+};
+  
+const saveRow = (rowIndex) => {
+  const newOriginal = [...originalData];
+  newOriginal[rowIndex] = [...data[rowIndex]];
+  setOriginalData(newOriginal);
+
+  const newDirty = new Set(dirtyRows);
+  newDirty.delete(rowIndex);
+  setDirtyRows(newDirty);
+};
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -202,11 +234,13 @@ function App() {
               </TableRow>
             </TableHead>
             <TableBody>
-                {data.map((row, rowIndex) => (
-                  <TableRow key={rowIndex}>
-                    {row.map((cell, colIndex) => (
+              {data.map((row, rowIndex) => (
+                <TableRow key={rowIndex} sx={{ bgcolor: dirtyRows.has(rowIndex) ? "#fff7e6" : "inherit" }}>
+                  {row.map((cell, colIndex) => {
                     const header = headers[colIndex];
                     const valid = isValidCell(cell, header);
+            
+                    return (
                       <TableCell key={colIndex}>
                         <input
                           value={cell}
@@ -221,11 +255,18 @@ function App() {
                           }}
                         />
                       </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-
+                    );
+                  })}
+                  {dirtyRows.has(rowIndex) && (
+                    <TableCell>
+                      <Button variant="outlined" size="small" onClick={() => saveRow(rowIndex)}>
+                        💾 Save
+                      </Button>
+                    </TableCell>
+                  )}
+                </TableRow>
+              ))}
+            </TableBody>
           </Table>
         </Paper>
       )}
