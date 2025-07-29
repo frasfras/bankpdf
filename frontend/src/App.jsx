@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import * as XLSX from "xlsx"; // make sure this is at the top of your file
 
 function App() {
   const [file, setFile] = useState(null);
@@ -55,6 +56,26 @@ function App() {
   URL.revokeObjectURL(url);
 };
 
+
+const downloadExcel = () => {
+  if (!data || data.length === 0) return;
+
+  const headers = ["Date", "Description", "Ref", "Details", "Debit Amount", "Credit Amount", "Balance"];
+  
+  const rows = data.map(row =>
+    headers.reduce((obj, key, index) => {
+      obj[key] = row[index] || "";
+      return obj;
+    }, {})
+  );
+
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
+
+  XLSX.writeFile(workbook, "bank_statement.xlsx");
+};
+
   return (
     <div style={{ padding: 20 }}>
       <h2>PDF Table Extractor</h2>
@@ -64,6 +85,9 @@ function App() {
       </button>
       <button onClick={downloadCSV} disabled={!data}>
          📄Download CSV
+      </button>
+      <button onClick={downloadExcel} disabled={!data}>
+          Download Excel
       </button>
 
       <div style={{ marginTop: 20 }}>
