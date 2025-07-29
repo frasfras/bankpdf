@@ -4,6 +4,7 @@ function App() {
   const [file, setFile] = useState(null);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const headers = ["Date", "Description", "Ref", "Details", "Debit Amount", "Credit Amount", "Balance"];
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -43,9 +44,29 @@ function App() {
         {loading ? "Uploading..." : "Upload PDF"}
       </button>
       <div style={{ marginTop: 20 }}>
-        <pre style={{ whiteSpace: "pre-wrap" }}>
-          {data ? JSON.stringify(data, null, 2) : "No data yet."}
-        </pre>
+        {data ? (
+  <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", marginTop: 20 }}>
+    <thead>
+      <tr>
+        {headers.map((header, index) => (
+          <th key={index}>{header}</th>
+        ))}
+      </tr>
+    </thead>
+    <tbody>
+      {data.map((row, i) => (
+        <tr key={i}>
+          {row.map((cell, j) => (
+            <td key={j}>{cell}</td>
+          ))}
+        </tr>
+      ))}
+    </tbody>
+  </table>
+) : (
+  <p>No data yet.</p>
+)}
+
       </div>
     </div>
   );
