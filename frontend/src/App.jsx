@@ -1,5 +1,21 @@
 import React, { useState } from "react";
 import * as XLSX from "xlsx";
+import {
+  Container,
+  Typography,
+  Button,
+  Box,
+  CircularProgress,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  Paper,
+  Alert,
+} from "@mui/material";
+import UploadFileIcon from '@mui/icons-material/UploadFile';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
 
 function App() {
   const [file, setFile] = useState(null);
@@ -14,15 +30,11 @@ function App() {
   const normalizeData = (raw) => {
     if (!Array.isArray(raw) || raw.length === 0) return [];
 
-    let jsonString = raw;
-let cleanedJsonString = jsonString.replace(/BEGINNINGBALANCE\\n/g, '');
-let parsedData = JSON.parse(cleanedJsonString);
-
     const normalized = [];
     const headers = raw[0];
 
-    for (let i = 1; i < parsedData.length; i++) {
-      const block = parsedData[i];
+    for (let i = 1; i < raw.length; i++) {
+      const block = raw[i];
       const numRows = block[0]?.split("\n").length || 0;
 
       for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
@@ -35,8 +47,10 @@ let parsedData = JSON.parse(cleanedJsonString);
       }
     }
 
-    return [headers, ...normalized];
-
+    return [
+      headers,
+      ...normalized];
+    
   };
 
   const handleUpload = async () => {
@@ -83,7 +97,6 @@ let parsedData = JSON.parse(cleanedJsonString);
 
     const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-
     const a = document.createElement("a");
     a.href = url;
     a.download = "bank_statement.csv";
@@ -104,45 +117,101 @@ let parsedData = JSON.parse(cleanedJsonString);
     const worksheet = XLSX.utils.json_to_sheet(rows);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
-
     XLSX.writeFile(workbook, "bank_statement.xlsx");
+  };
+  const handleCellChange = (e, rowIndex, colIndex) => {
+  const newData = [...data];
+  newData[rowIndex][colIndex] = e.target.value;
+  setData(newData);
   };
 
   return (
-    <div style={{ padding: 20, fontFamily: "Arial" }}>
-      <h2>PDF Table Extractor</h2>
-      <input type="file" accept="application/pdf" onChange={handleFileChange} />
-      <button onClick={handleUpload} disabled={loading || !file}>
-        {loading ? "Uploading..." : "Upload PDF"}
-      </button>
-      <button onClick={downloadCSV} disabled={!data.length}>
-        Download CSV
-      </button>
-      <button onClick={downloadExcel} disabled={!data.length}>
-        Download Excel
-      </button>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Typography variant="h4" gutterBottom>
+        📄 PDF Table Extractor
+      </Typography>
+
+      <Box display="flex" alignItems="center" gap={2} my={2}>
+        <input
+          accept="application/pdf"
+          style={{ display: "none" }}
+          id="upload-pdf"
+          type="file"
+          onChange={handleFileChange}
+        />
+        <label htmlFor="upload-pdf">
+          <Button variant="contained" component="span" startIcon={<UploadFileIcon />}>
+            Select PDF
+          </Button>
+        </label>
+        <Button
+          variant="contained"
+          onClick={handleUpload}
+          disabled={!file || loading}
+          color="primary"
+        >
+          {loading ? <CircularProgress size={24} /> : "Upload & Extract"}
+        </Button>
+        <Button
+          variant="outlined"
+          onClick={downloadCSV}
+          disabled={!data.length}
+          startIcon={<FileDownloadIcon />}
+        >
+          CSV
+        </Button>
+        <Button
+          variant="outlined"
+          onClick={downloadExcel}
+          disabled={!data.length}
+          startIcon={<FileDownloadIcon />}
+        >
+          Excel
+        </Button>
+      </Box>
+
+      {headers.length > 0 && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Note: Credit amounts may appear one row above where they apply due to source formatting.
+        </Alert>
+      )}
 
       {data.length > 0 && (
-        <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", marginTop: 20 }}>
-          <thead>
-            <tr>{headers.map((h, i) => <th key={i}>{h}</th>)}</tr>
-          </thead>
-          <tbody>
-            {data.map((row, i) => (
-              <tr key={i}>
-                {row.map((cell, j) => <td key={j}>{cell}</td>)}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-      {headers.length > 0 && (
-        <p style={{ marginTop: 10, fontStyle: "italic", color: "#555" }}>
-          Note: Credit amounts may appear one row above where they apply due to source formatting. Please verify during export.
-        </p>
-      )}
+        <Paper>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                {headers.map((h, i) => (
+                  <TableCell key={i}><strong>{h}</strong></TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+                {data.map((row, rowIndex) => (
+                  <TableRow key={rowIndex}>
+                    {row.map((cell, colIndex) => (
+                      <TableCell key={colIndex}>
+                        <input
+                          value={cell}
+                          onChange={(e) => handleCellChange(e, rowIndex, colIndex)}
+                          style={{
+                            width: "100%",
+                            border: "none",
+                            background: "transparent",
+                            outline: "none",
+                            font: "inherit"
+                          }}
+                        />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
 
-    </div>
+          </Table>
+        </Paper>
+      )}
+    </Container>
   );
 }
 
