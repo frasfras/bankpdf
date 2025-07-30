@@ -26,7 +26,7 @@ def extract_table():
                             if cell and cell.strip():
                                 cleaned_row.append(cell)
                             else:
-                                cleaned_row.append('')
+                                cleaned_row.append(' \n')
                         line_items.append(cleaned_row)
     
 
