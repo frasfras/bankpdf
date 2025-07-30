@@ -18,7 +18,7 @@ def extract_table_from_pdf(pdf_path):
         for page in pages:
             table = page.extract_table(table_settings={"vertical_strategy": "lines", 
                                                "horizontal_strategy": "text", 
-                                               "snap_tolerance": 4,})[1:]
+                                               "snap_tolerance": 4,})[0:]
             if table:
                 data.extend(table)
     return data
