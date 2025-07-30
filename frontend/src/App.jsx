@@ -89,7 +89,9 @@ function App() {
       );
 
       const result = await response.json();console.log(result);
-      const normalized = normalizeData(result);
+      const table = json.table;
+      if (table.length > 1) {
+      const normalized = normalizeData(table);
 
       if (normalized.length > 1) {
         setHeaders(normalized[0]);
@@ -100,6 +102,7 @@ function App() {
       } else {
         setHeaders([]);
         setData([]);
+      }
       }
     } catch (error) {
       console.error("Upload failed:", error);
