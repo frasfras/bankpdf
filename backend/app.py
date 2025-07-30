@@ -6,10 +6,10 @@ import os
 
 app = Flask(__name__)
 CORS(app)
-
-def extract_table_from_pdf(pdf_bytes):
+ 
+def extract_table_from_pdf(pdf_path):
     """Extract table data from PDF bytes"""
-    with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
+    with pdfplumber.open(pdf_path) as pdf:
         pages = pdf.pages
         p0 = pdf.pages[0]
         im = p0.to_image()
