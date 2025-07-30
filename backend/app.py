@@ -7,12 +7,18 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-def extract_table_from_pdf(pdf_path):
-    with pdfplumber.open(pdf_path) as pdf:
+def extract_table_from_pdf(pdf_bytes):
+    """Extract table data from PDF bytes"""
+    with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
         pages = pdf.pages
+        p0 = pdf.pages[0]
+        im = p0.to_image()
+        im
         data = []
         for page in pages:
-            table = page.extract_table()
+            table = page.extract_table(table_settings={"vertical_strategy": "lines", 
+                                               "horizontal_strategy": "text", 
+                                               "snap_tolerance": 4,})[1:]
             if table:
                 data.extend(table)
     return data
