@@ -89,7 +89,7 @@ function App() {
       );
 
       const result = await response.json();console.log(result);
-      const table = json.table;
+      const table = result.table;
       if (table.length > 1) {
       const normalized = normalizeData(table);
 
