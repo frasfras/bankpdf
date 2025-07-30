@@ -88,7 +88,7 @@ function App() {
         }
       );
 
-      const result = await response.json();
+      const result = await response.json();console.log(result);
       const normalized = normalizeData(result);
 
       if (normalized.length > 1) {
@@ -218,9 +218,7 @@ const saveRow = (rowIndex) => {
           Excel
         </Button>
       </Box>
-      <pre style={{ marginTop: 20, whiteSpace: "pre-wrap" }}>
-        {data ? JSON.stringify(data, null, 2) : "No data yet."}
-      </pre>
+      
       {headers.length > 0 && (
         <Alert severity="info" sx={{ mb: 2 }}>
           Note: Credit amounts may appear one row above where they apply due to source formatting.
