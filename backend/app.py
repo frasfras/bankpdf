@@ -19,7 +19,7 @@ def extract_table():
             tables = page.extract_tables()
             for table in tables:
                 for row in table:
-                    if row and any(cell and cell.strip() for cell in row):
+                  #  if row and any(cell and cell.strip() for cell in row):
                         # Clean the row: replace whitespace-only cells with empty string
                         cleaned_row = []
                         for cell in row:
