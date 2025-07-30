@@ -65,7 +65,7 @@ function App() {
 //    const isFakeRow = desc.includes("BEGINNINGBALANCE");
     const isEmpty = row.every(cell => cell.trim() === "");
     const isHeaderRepeat = row.join("|").toUpperCase() === headers.join("|").toUpperCase();
-    return !isFakeRow && !isEmpty && !isHeaderRepeat;
+    return !isEmpty && !isHeaderRepeat;
   });
 
   return [headers, ...cleaned];
