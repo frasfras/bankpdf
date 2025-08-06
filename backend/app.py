@@ -15,10 +15,12 @@ def extract_table_from_pdf(pdf_path):
         im = p0.to_image()
         im
         data = []
+        explicit_vertical_lines=[34,62,198,220,370,439,508,579]
         for page in pages:
-            table = page.extract_table(table_settings={"vertical_strategy": "lines", 
+            table = page.extract_table(table_settings={"vertical_strategy": "explicit",
+                                                       "explicit_vertical_lines": explicit_vertical_lines,
                                                "horizontal_strategy": "text", 
-                                               "snap_tolerance": 4,})[0:]
+                                               "snap_tolerance": 4,})[5:]
             if table:
                 data.extend(table)
     return data
