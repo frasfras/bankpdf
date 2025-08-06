@@ -68,8 +68,9 @@ function App() {
         // Skip repeated headers, blank rows, or "BEGINNINGBALANCE"
         const desc = row[1]?.toUpperCase() || "";
         const isFake = desc.includes("BEGINNINGBALANCE");
+        const isBal = desc.includes("BALANCE");
         const isEmpty = row.every(cell => cell === "");
-         if (!rowIsHeader && !isEmpty && !isFake) {
+         if (!rowIsHeader && !isBal && !isEmpty && !isFake) {
           normalized.push(row);
          }
         }
