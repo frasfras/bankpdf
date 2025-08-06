@@ -43,33 +43,49 @@ function App() {
     if (!Array.isArray(raw) || raw.length === 0) return [];
 
     const normalized = [];
-    const headers = raw[0];
+    const headers = raw[0].map(h => h.trim().toUpperCase());
+ //   const headers = raw[0];
 
     for (let i = 1; i < raw.length; i++) {
       const block = raw[i];
       const numRows = block[0]?.split("\n").length || 0;
 
       for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
-        const row = headers.map((_, colIndex) => {
-          const col = block[colIndex] || "";
-          const lines = col.split("\n");
-          return lines[rowIndex] || "";
-        });
-        normalized.push(row);
+       // const row = headers.map((_, colIndex) => {
+       //   const col = block[colIndex] || "";
+       //   const lines = col.split("\n");
+       //   return lines[rowIndex] || "";
+       // });
+        const row = block.map(col => {
+        const lines = col.split("\n");
+        return lines[rowIndex]?.trim() || "";
+         });
+        
+        // Check if it's a repeated header row
+        const rowIsHeader = row.length === headers.length &&
+          row.every((cell, idx) => cell.toUpperCase() === headers[idx]);
+  
+        // Skip repeated headers, blank rows, or "BEGINNINGBALANCE"
+        const desc = row[1]?.toUpperCase() || "";
+        const isFake = desc.includes("BEGINNINGBALANCE");
+        const isEmpty = row.every(cell => cell === "");
+         if (!rowIsHeader && !isEmpty && !isFake) {
+          normalized.push(row);
+         }
+        }
       }
-    }
 
     // 🧼 Clean up repeated headers and BEGINNINGBALANCE rows
-  const cleaned = normalized.filter(row => {
-    const desc = row[1]?.toUpperCase() || "";
+ // const cleaned = normalized.filter(row => {
+ //   const desc = row[1]?.toUpperCase() || "";
 //    const isFakeRow = desc.includes("BEGINNINGBALANCE");
-    const isEmpty = row.every(cell => cell.trim() === "");
-    const isHeaderRepeat = row.join("|").toUpperCase() === headers.join("|").toUpperCase();
-    return !isEmpty && !isHeaderRepeat;
-  });
+ //   const isEmpty = row.every(cell => cell.trim() === "");
+ //   const isHeaderRepeat = row.join("|").toUpperCase() === headers.join("|").toUpperCase();
+ //   return !isEmpty && !isHeaderRepeat;
+//  });
 
-  return [headers, ...cleaned];
-    
+//  return [headers, ...cleaned];
+    return [raw[0], ...normalized];
   };
 
   const handleUpload = async () => {
