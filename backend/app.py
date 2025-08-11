@@ -29,11 +29,13 @@ def extract_table_from_pdf(pdf_path):
                 table = page.extract_table(table_settings={"vertical_strategy": "explicit",
                                                        "explicit_vertical_lines": explicit_vertical_lines,
                                                "horizontal_strategy": "text",
-                                               "snap_tolerance": 4,})[5:]
+                                               "snap_tolerance": 4,
+                                               "intersection_x_tolerance": 15,})[5:]
             else:
                 table = page.extract_table(table_settings={"vertical_strategy": "lines", 
                                                "horizontal_strategy": "text", 
-                                               "snap_tolerance": 4,})[0:]
+                                               "snap_tolerance": 4,
+                                               "intersection_x_tolerance": 15,})[0:]
             if table:
                 data.extend(table)
     return data
